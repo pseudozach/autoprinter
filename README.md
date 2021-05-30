@@ -1,5 +1,5 @@
 # Shopify Auto Shipping Label Printer
-## Step-1
+## Steps
 
 * Go to your Shopify Admin Page and create a webhook to be sent for order/paid.
 * Enter your homeserver address that's running `node index.js` from this library as the endpoint.
