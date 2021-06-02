@@ -2,27 +2,39 @@ const express = require('express')
 const { exec } = require('child_process');
 const textToImage = require('text-to-image');
 var base64Img = require('base64-img');
+var bodyParser = require('body-parser')
 
 var app = express()
-.post('/printit', (req, res) => {
-  console.log("printit hit: ",req.body);
-  var shippingaddress = req.body.shipping_address;
-  var texttoprint = shippingaddress.first_name + " " + shippingaddress.last_name + "\n";
-  texttoprint += shippingaddress.address1 + "\n";
-  texttoprint += shippingaddress.address2 + "\n";
-  texttoprint += shippingaddress.city + ", " + shippingaddress.province_code + ", " + shippingaddress.country_code"\n";
-  //  printit();
-  textToImage.generate(texttoprint).then(function (dataUri) {
-    console.log(dataUri);
-    base64Img.img(dataUri, '', 'printit1', function(err, filepath) {
-      console.log("filepath: ", filepath);
-      printit(filepath);
+  .use(bodyParser.json())
+  .use(bodyParser.urlencoded({extended: true}))
+  .post('/printit', (req, res) => {
+    // console.log("printit hit req: ",req);
+    console.log("printit hit: ",req.body);
+    var shippingaddress = req.body.shipping_address;
+    var texttoprint = shippingaddress.first_name + " " + shippingaddress.last_name + "\n";
+    texttoprint += shippingaddress.address1 + "\n";
+    if(shippingaddress.address2 && shippingaddress.address2 != ""){
+      texttoprint += shippingaddress.address2 + "\n";  
+    }
+    texttoprint += shippingaddress.city + ", " + shippingaddress.province_code + ", " + shippingaddress.country_code + " " + shippingaddress.zip;
+    //  printit();
+    console.log("received shipping label text to print: ", texttoprint);
+    console.log("generating image for printing...");
+    textToImage.generate(texttoprint).then(function (dataUri) {
+      console.log(dataUri);
+      base64Img.img(dataUri, '', 'printit1', function(err, filepath) {
+        console.log("filepath: ", filepath);
+        printit(filepath);
+
+        return res.send("OK");
+      });
     });
+    //  printit();
+    //    return res.send("ok")
+  })
+  .listen(3000, () => {
+    console.log(`Listening on 3000`)
   });
-  //  printit();
-  //    return res.send("ok")
-})
-.listen(3000, () => console.log(`Listening on 3000`))
 
 function printit(filepath){
 	console.log("printit filepath: ", filepath);
